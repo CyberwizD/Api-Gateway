@@ -12,4 +12,4 @@ WORKDIR /root/
 
 COPY --from=builder /api-gateway /api-gateway
 EXPOSE 8080
-CMD ["/api-gateway"]
+CMD ["/cmd/server"]
