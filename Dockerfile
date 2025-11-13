@@ -1,15 +1,35 @@
-FROM golang:1.24-alpine AS builder
+# --------------------------
+# Builder Stage
+# --------------------------
+FROM golang:1.22 AS builder
+
+# Set working directory
 WORKDIR /app
 
+# Copy go mod files first (for caching)
 COPY go.mod go.sum ./
 RUN go mod download
 
+# Copy the rest of the source code
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o server cmd/server/main.go
 
+# Build the Go binary
+# Output the binary to: /app/bin/server
+RUN CGO_ENABLED=0 GOOS=linux go build -o /app/bin/server ./cmd/server
+
+# --------------------------
+# Final Stage
+# --------------------------
 FROM alpine:latest
+
+# Set working directory in final image
 WORKDIR /root/
 
-COPY --from=builder cmd/server cmd/server
+# Copy the compiled binary from builder
+COPY --from=builder /app/bin/server /root/server
+
+# Expose port
 EXPOSE 8080
-CMD ["/cmd/server"]
+
+# Command to run the server
+CMD ["/root/server"]
